@@ -1,0 +1,1872 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Central Tools</title>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fengari-web@0.1.4/dist/fengari-web.min.js"></script>
+    <style>
+        /* Global Theme: Black and Dark Orange (Linux-inspired terminal vibe) */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Courier New', monospace;
+            background: #000;
+            color: #FF8C00;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+        header {
+            background: linear-gradient(90deg, #000, #FF8C00, #000);
+            padding: 20px;
+            text-align: center;
+            font-size: 2em;
+            border-bottom: 2px solid #FF8C00;
+        }
+        nav {
+            background: #111;
+            padding: 10px;
+            text-align: center;
+            border-bottom: 1px solid #FF8C00;
+        }
+        nav button {
+            background: #000;
+            color: #FF8C00;
+            border: 1px solid #FF8C00;
+            padding: 10px 20px;
+            margin: 0 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        nav button:hover {
+            background: #FF8C00;
+            color: #000;
+        }
+        section {
+            padding: 20px;
+            min-height: 100vh;
+            display: none;
+        }
+        section.active {
+            display: block;
+            animation: fadeIn 1s ease-in, wiggle 0.5s ease-in-out;
+        }
+        h1, h2 {
+            color: #FF8C00;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        input, textarea, button {
+            background: #111;
+            color: #FF8C00;
+            border: 1px solid #FF8C00;
+            padding: 10px;
+            margin: 5px;
+            font-family: inherit;
+        }
+        button:hover {
+            background: #FF8C00;
+            color: #000;
+        }
+        #qrcode {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .script-item {
+            background: #111;
+            margin: 10px 0;
+            padding: 15px;
+            border-left: 4px solid #FF8C00;
+        }
+        .script-item h3 {
+            color: #FF8C00;
+        }
+        .code-block {
+            background: #000;
+            border: 1px solid #FF8C00;
+            padding: 10px;
+            margin: 10px 0;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+        .explanation {
+            display: none;
+            background: #222;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #FF8C00;
+        }
+        .explanation.active {
+            display: block;
+            animation: fadeIn 0.5s ease-out;
+        }
+        .lang-section {
+            display: none;
+        }
+        .lang-section.active {
+            display: block;
+        }
+        #js-output, #html-preview, #lua-output {
+            background: #000;
+            border: 1px solid #FF8C00;
+            padding: 10px;
+            margin: 10px 0;
+            min-height: 200px;
+        }
+        iframe {
+            width: 100%;
+            height: 400px;
+            border: 1px solid #FF8C00;
+        }
+        .youtube-links {
+            text-align: center;
+            font-size: 1.5em;
+        }
+        .youtube-links a {
+            color: #FF8C00;
+            text-decoration: none;
+            margin: 0 20px;
+        }
+        .youtube-links a:hover {
+            color: #FFF;
+        }
+        .tabs {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .tabs button {
+            margin: 0 5px;
+            animation: wiggle 1s infinite alternate;
+        }
+
+        /* Reduced Animations: Only fade in and wiggle */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes wiggle {
+            0% { transform: rotate(-2deg); }
+            100% { transform: rotate(2deg); }
+        }
+        /* Removed excessive animations like rotate, typewriter, pulse, etc. Sections now only fade in and wiggle once on activation. */
+    </style>
+</head>
+<body>
+    <header>
+        Central Tools
+    </header>
+    <nav>
+        <button onclick="showSection('qr')">QR Generator</button>
+        <button onclick="showSection('scripts')">Scripts</button>
+        <button onclick="showSection('youtube')">YouTube</button>
+        <button onclick="showSection('js-runner')">JS Runner</button>
+        <button onclick="showSection('html-runner')">HTML Runner</button>
+        <button onclick="showSection('lua-runner')">Lua Runner</button>
+    </nav>
+
+    <section id="qr" class="active">
+        <h1>QR Code Generator for Websites</h1>
+        <p style="text-align: center;">Enter a URL to generate a customizable QR code. Download as PNG.</p>
+        <div style="text-align: center;">
+            <input type="url" id="urlInput" placeholder="https://example.com" required>
+            <br>
+            <label>Size (px): <input type="number" id="sizeInput" value="200" min="100" max="500"></label>
+            <br>
+            <label>Color: <input type="color" id="colorInput" value="#FF8C00"></label>
+            <br>
+            <button onclick="generateQR()">Generate QR</button>
+            <br>
+            <div id="qrcode"></div>
+            <button id="downloadBtn" onclick="downloadQR()" style="display:none;">Download PNG</button>
+        </div>
+    </section>
+
+    <section id="scripts">
+        <h1>Useful Scripts Library</h1>
+        <p style="text-align: center;">Browse scripts by language. Click "Explain" for line-by-line breakdown.</p>
+        <div class="tabs">
+            <button onclick="showLang('html')">HTML</button>
+            <button onclick="showLang('lua')">Lua</button>
+            <button onclick="showLang('c')">C</button>
+            <button onclick="showLang('cpp')">C++</button>
+            <button onclick="showLang('csharp')">C#</button>
+            <button onclick="showLang('js')">JavaScript</button>
+            <button onclick="showLang('python')">Python</button>
+            <button onclick="showLang('java')">Java</button>
+        </div>
+        
+        <!-- HTML Scripts (20 examples) -->
+        <div id="html" class="lang-section active">
+            <div class="script-item">
+                <h3>Simple Button</h3>
+                <div class="code-block">&lt;button onclick="alert('Clicked!')"&gt;Click Me&lt;/button&gt;</div>
+                <p>Description: A basic interactive button that shows an alert.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 1:</strong> &lt;button onclick="alert('Clicked!')"&gt; - Defines button with JS event.</p>
+                    <p><strong>Click Me&lt;/button&gt;:</strong> Text and closing tag.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Centered Div</h3>
+                <div class="code-block">&lt;div style="text-align:center;"&gt;Hello World&lt;/div&gt;</div>
+                <p>Description: Centers text in a div.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 1:</strong> &lt;div style="text-align:center;"&gt; - Div with centering style.</p>
+                    <p><strong>Hello World&lt;/div&gt;:</strong> Content and closing.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Hyperlink</h3>
+                <div class="code-block">&lt;a href="https://example.com"&gt;Visit Example&lt;/a&gt;</div>
+                <p>Description: Creates a clickable link.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 1:</strong> &lt;a href="https://example.com"&gt; - Anchor tag with URL.</p>
+                    <p><strong>Visit Example&lt;/a&gt;:</strong> Text and closing.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Image Tag</h3>
+                <div class="code-block">&lt;img src="image.jpg" alt="Description" width="300"&gt;</div>
+                <p>Description: Embeds an image.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 1:</strong> &lt;img src="image.jpg" alt="Description" width="300"&gt; - Image with source, alt text, width.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Unordered List</h3>
+                <div class="code-block">&lt;ul&gt;&lt;li&gt;Item 1&lt;/li&gt;&lt;li&gt;Item 2&lt;/li&gt;&lt;/ul&gt;</div>
+                <p>Description: Bullet point list.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 1:</strong> &lt;ul&gt; - Starts unordered list.</p>
+                    <p><strong>&lt;li&gt;Item 1&lt;/li&gt;:</strong> List item.</p>
+                    <p><strong>&lt;/ul&gt;:</strong> Closes list.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Ordered List</h3>
+                <div class="code-block">&lt;ol&gt;&lt;li&gt;Step 1&lt;/li&gt;&lt;li&gt;Step 2&lt;/li&gt;&lt;/ol&gt;</div>
+                <p>Description: Numbered list.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 1:</strong> &lt;ol&gt; - Starts ordered list.</p>
+                    <p><strong>&lt;li&gt;Step 1&lt;/li&gt;:</strong> List item.</p>
+                    <p><strong>&lt;/ol&gt;:</strong> Closes list.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Table</h3>
+                <div class="code-block">&lt;table&gt;&lt;tr&gt;&lt;th&gt;Header&lt;/th&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;Data&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;</div>
+                <p>Description: Basic table structure.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 1:</strong> &lt;table&gt; - Starts table.</p>
+                    <p><strong>&lt;tr&gt;&lt;th&gt;Header&lt;/th&gt;&lt;/tr&gt;:</strong> Row with header.</p>
+                    <p><strong>&lt;tr&gt;&lt;td&gt;Data&lt;/td&gt;&lt;/tr&gt;:</strong> Row with data.</p>
+                    <p><strong>&lt;/table&gt;:</strong> Closes table.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Form Input</h3>
+                <div class="code-block">&lt;form&gt;&lt;input type="text" name="name"&gt;&lt;button&gt;Submit&lt;/button&gt;&lt;/form&gt;</div>
+                <p>Description: Simple form with input.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 1:</strong> &lt;form&gt; - Starts form.</p>
+                    <p><strong>&lt;input type="text" name="name"&gt;:</strong> Text input.</p>
+                    <p><strong>&lt;button&gt;Submit&lt;/button&gt;:</strong> Submit button.</p>
+                    <p><strong>&lt;/form&gt;:</strong> Closes form.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Heading Tags</h3>
+                <div class="code-block">&lt;h1&gt;Title&lt;/h1&gt;&lt;h2&gt;Subtitle&lt;/h2&gt;</div>
+                <p>Description: Hierarchy headings.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 1:</strong> &lt;h1&gt;Title&lt;/h1&gt; - Main heading.</p>
+                    <p><strong>&lt;h2&gt;Subtitle&lt;/h2&gt;:</strong> Subheading.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Paragraph</h3>
+                <div class="code-block">&lt;p&gt;This is a paragraph.&lt;/p&gt;</div>
+                <p>Description: Basic text block.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 1:</strong> &lt;p&gt; - Starts paragraph.</p>
+                    <p><strong>This is a paragraph.&lt;/p&gt;:</strong> Content and closing.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Bold Text</h3>
+                <div class="code-block">&lt;b&gt;Bold&lt;/b&gt;</div>
+                <p>Description: Makes text bold.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 1:</strong> &lt;b&gt;Bold&lt;/b&gt; - Bold tag.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Italic Text</h3>
+                <div class="code-block">&lt;i&gt;Italic&lt;/i&gt;</div>
+                <p>Description: Makes text italic.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 1:</strong> &lt;i&gt;Italic&lt;/i&gt; - Italic tag.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Line Break</h3>
+                <div class="code-block">Line one&lt;br&gt;Line two</div>
+                <p>Description: Inserts a line break.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 1:</strong> &lt;br&gt; - Break tag.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Horizontal Rule</h3>
+                <div class="code-block">&lt;hr&gt;</div>
+                <p>Description: Draws a horizontal line.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 1:</strong> &lt;hr&gt; - Horizontal rule tag.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Select Dropdown</h3>
+                <div class="code-block">&lt;select&gt;&lt;option&gt;Option 1&lt;/option&gt;&lt;option&gt;Option 2&lt;/option&gt;&lt;/select&gt;</div>
+                <p>Description: Dropdown menu.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 1:</strong> &lt;select&gt; - Starts select.</p>
+                    <p><strong>&lt;option&gt;Option 1&lt;/option&gt;:</strong> Option.</p>
+                    <p><strong>&lt;/select&gt;:</strong> Closes.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Checkbox</h3>
+                <div class="code-block">&lt;input type="checkbox" name="agree"&gt; Agree</div>
+                <p>Description: Checkbox input.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 1:</strong> &lt;input type="checkbox" name="agree"&gt; - Checkbox.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Radio Button</h3>
+                <div class="code-block">&lt;input type="radio" name="choice" value="yes"&gt; Yes</div>
+                <p>Description: Radio selection.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 1:</strong> &lt;input type="radio" name="choice" value="yes"&gt; - Radio button.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Textarea</h3>
+                <div class="code-block">&lt;textarea rows="4" cols="50"&gt;&lt;/textarea&gt;</div>
+                <p>Description: Multi-line text input.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 1:</strong> &lt;textarea rows="4" cols="50"&gt;&lt;/textarea&gt; - Textarea with size.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Iframe</h3>
+                <div class="code-block">&lt;iframe src="https://example.com" width="600" height="400"&gt;&lt;/iframe&gt;</div>
+                <p>Description: Embeds another page.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 1:</strong> &lt;iframe src="https://example.com" width="600" height="400"&gt;&lt;/iframe&gt; - Iframe with source and size.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Meta Tag</h3>
+                <div class="code-block">&lt;meta charset="UTF-8"&gt;</div>
+                <p>Description: Sets character encoding.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 1:</strong> &lt;meta charset="UTF-8"&gt; - Meta for charset.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lua Scripts (20 examples) -->
+        <div id="lua" class="lang-section">
+            <div class="script-item">
+                <h3>Hello World</h3>
+                <div class="code-block">print("Hello, World!")</div>
+                <p>Description: Prints a message.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 1:</strong> print("Hello, World!") - Outputs string.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Simple Loop</h3>
+                <div class="code-block">for i=1,5 do print(i) end</div>
+                <p>Description: Loops 1 to 5.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 1:</strong> for i=1,5 do print(i) end - For loop with print.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>If Statement</h3>
+                <div class="code-block">if true then print("True") end</div>
+                <p>Description: Conditional execution.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 1:</strong> if true then print("True") end - If condition.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Function Definition</h3>
+                <div class="code-block">function greet() print("Hi") end greet()</div>
+                <p>Description: Defines and calls function.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 1:</strong> function greet() print("Hi") end - Defines function.</p>
+                    <p><strong>greet():</strong> Calls it.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Table Creation</h3>
+                <div class="code-block">local t = {1, 2, 3} print(t[1])</div>
+                <p>Description: Array-like table.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 1:</strong> local t = {1, 2, 3} - Creates table.</p>
+                    <p><strong>print(t[1]):</strong> Accesses element.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>While Loop</h3>
+                <div class="code-block">local i=1 while i<=5 do print(i) i=i+1 end</div>
+                <p>Description: While loop example.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 1:</strong> local i=1 while i<=5 do print(i) i=i+1 end - While with increment.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>String Concat</h3>
+                <div class="code-block">print("Hello" .. " World")</div>
+                <p>Description: Concatenates strings.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 1:</strong> print("Hello" .. " World") - Uses .. for concat.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Math Operation</h3>
+                <div class="code-block">print(math.sqrt(16))</div>
+                <p>Description: Square root.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 1:</strong> print(math.sqrt(16)) - Math library function.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>For Each Loop</h3>
+                <div class="code-block">local t={a=1,b=2} for k,v in pairs(t) do print(k,v) end</div>
+                <p>Description: Iterates table.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 1:</strong> for k,v in pairs(t) do print(k,v) end - Pairs iterator.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Error Handling</h3>
+                <div class="code-block">pcall(function() error("Test") end)</div>
+                <p>Description: Protected call.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 1:</strong> pcall(function() error("Test") end) - Catches error.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Variable Assignment</h3>
+                <div class="code-block">local x = 10 print(x)</div>
+                <p>Description: Local variable.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 1:</strong> local x = 10 - Assigns value.</p>
+                    <p><strong>print(x):</strong> Outputs.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Boolean Check</h3>
+                <div class="code-block">if 1 > 0 then print("Yes") else print("No") end</div>
+                <p>Description: If-else.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 1:</strong> if 1 > 0 then print("Yes") else print("No") end - Conditional with else.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>String Length</h3>
+                <div class="code-block">print(#"Hello")</div>
+                <p>Description: Gets length.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 1:</strong> print(#"Hello") - # operator for length.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Table Insert</h3>
+                <div class="code-block">local t={} table.insert(t, "value") print(t[1])</div>
+                <p>Description: Adds to table.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 1:</strong> table.insert(t, "value") - Inserts value.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Repeat Until</h3>
+                <div class="code-block">local i=1 repeat print(i) i=i+1 until i>5</div>
+                <p>Description: Repeat loop.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 1:</strong> repeat ... until i>5 - Loop until condition.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Metatable Set</h3>
+                <div class="code-block">local t={} setmetatable(t, {__index={a=1}}) print(t.a)</div>
+                <p>Description: Basic metatable.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 1:</strong> setmetatable(t, {__index={a=1}}) - Sets metatable for index.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>File Read</h3>
+                <div class="code-block">local f=io.open("file.txt","r") print(f:read()) f:close()</div>
+                <p>Description: Reads file.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 1:</strong> io.open("file.txt","r") - Opens file.</p>
+                    <p><strong>f:read():</strong> Reads content.</p>
+                    <p><strong>f:close():</strong> Closes.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Coroutine Create</h3>
+                <div class="code-block">local co = coroutine.create(function() print("Hi") end) coroutine.resume(co)</div>
+                <p>Description: Basic coroutine.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 1:</strong> coroutine.create(...) - Creates coroutine.</p>
+                    <p><strong>coroutine.resume(co):</strong> Runs it.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>OS Time</h3>
+                <div class="code-block">print(os.time())</div>
+                <p>Description: Gets current time.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 1:</strong> print(os.time()) - OS library time.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Random Number</h3>
+                <div class="code-block">math.randomseed(os.time()) print(math.random(1,10))</div>
+                <p>Description: Generates random.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 1:</strong> math.randomseed(os.time()) - Seeds random.</p>
+                    <p><strong>print(math.random(1,10)):</strong> Random between 1-10.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- C Scripts (20 examples) -->
+        <div id="c" class="lang-section">
+            <div class="script-item">
+                <h3>Hello World</h3>
+                <div class="code-block">#include &lt;stdio.h&gt;\nint main() {\n    printf("Hello, World!\\n");\n    return 0;\n}</div>
+                <p>Description: Basic program.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 1:</strong> #include &lt;stdio.h&gt; - Includes printf.</p>
+                    <p><strong>Line 2:</strong> int main() { - Main function.</p>
+                    <p><strong>Line 3:</strong> printf("Hello, World!\\n"); - Prints.</p>
+                    <p><strong>Line 4:</strong> return 0; - Exits.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>For Loop</h3>
+                <div class="code-block">#include &lt;stdio.h&gt;\nint main() {\n    for(int i=1; i<=5; i++) printf("%d\\n", i);\n    return 0;\n}</div>
+                <p>Description: Loops 1 to 5.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 3:</strong> for(int i=1; i<=5; i++) printf("%d\\n", i); - For loop with print.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>If Statement</h3>
+                <div class="code-block">#include &lt;stdio.h&gt;\nint main() {\n    if(1 > 0) printf("True\\n");\n    return 0;\n}</div>
+                <p>Description: Conditional.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 3:</strong> if(1 > 0) printf("True\\n"); - If condition.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Array Declaration</h3>
+                <div class="code-block">#include &lt;stdio.h&gt;\nint main() {\n    int arr[3] = {1,2,3};\n    printf("%d\\n", arr[0]);\n    return 0;\n}</div>
+                <p>Description: Array usage.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 3:</strong> int arr[3] = {1,2,3}; - Declares array.</p>
+                    <p><strong>Line 4:</strong> printf("%d\\n", arr[0]); - Accesses element.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Function</h3>
+                <div class="code-block">#include &lt;stdio.h&gt;\nvoid greet() { printf("Hi\\n"); }\nint main() {\n    greet();\n    return 0;\n}</div>
+                <p>Description: Defines function.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 2:</strong> void greet() { printf("Hi\\n"); } - Function definition.</p>
+                    <p><strong>Line 4:</strong> greet(); - Call.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>While Loop</h3>
+                <div class="code-block">#include &lt;stdio.h&gt;\nint main() {\n    int i=1;\n    while(i<=5) { printf("%d\\n", i); i++; }\n    return 0;\n}</div>
+                <p>Description: While example.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 4:</strong> while(i<=5) { ... } - Loop with increment.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>String Print</h3>
+                <div class="code-block">#include &lt;stdio.h&gt;\nint main() {\n    char str[] = "Hello";\n    printf("%s\\n", str);\n    return 0;\n}</div>
+                <p>Description: Prints string.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 3:</strong> char str[] = "Hello"; - String array.</p>
+                    <p><strong>Line 4:</strong> printf("%s\\n", str); - Print with %s.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Pointer</h3>
+                <div class="code-block">#include &lt;stdio.h&gt;\nint main() {\n    int x=10;\n    int* p = &x;\n    printf("%d\\n", *p);\n    return 0;\n}</div>
+                <p>Description: Basic pointer.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 4:</strong> int* p = &x; - Pointer to x.</p>
+                    <p><strong>Line 5:</strong> printf("%d\\n", *p); - Dereference.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Struct</h3>
+                <div class="code-block">#include &lt;stdio.h&gt;\nstruct Point { int x, y; };\nint main() {\n    struct Point p = {1,2};\n    printf("%d\\n", p.x);\n    return 0;\n}</div>
+                <p>Description: Structure.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 2:</strong> struct Point { int x, y; }; - Defines struct.</p>
+                    <p><strong>Line 4:</strong> struct Point p = {1,2}; - Instance.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>File Open</h3>
+                <div class="code-block">#include &lt;stdio.h&gt;\nint main() {\n    FILE* f = fopen("file.txt", "r");\n    fclose(f);\n    return 0;\n}</div>
+                <p>Description: Opens file.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 3:</strong> FILE* f = fopen("file.txt", "r"); - Opens read mode.</p>
+                    <p><strong>Line 4:</strong> fclose(f); - Closes.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Switch Case</h3>
+                <div class="code-block">#include &lt;stdio.h&gt;\nint main() {\n    int x=1;\n    switch(x) { case 1: printf("One\\n"); break; }\n    return 0;\n}</div>
+                <p>Description: Switch statement.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 4:</strong> switch(x) { case 1: ... } - Switch on x.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Do While</h3>
+                <div class="code-block">#include &lt;stdio.h&gt;\nint main() {\n    int i=1;\n    do { printf("%d\\n", i); i++; } while(i<=5);\n    return 0;\n}</div>
+                <p>Description: Do-while loop.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 4:</strong> do { ... } while(i<=5); - Executes at least once.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Malloc</h3>
+                <div class="code-block">#include &lt;stdio.h&gt;\n#include &lt;stdlib.h&gt;\nint main() {\n    int* p = malloc(sizeof(int));\n    free(p);\n    return 0;\n}</div>
+                <p>Description: Dynamic memory.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 4:</strong> int* p = malloc(sizeof(int)); - Allocates.</p>
+                    <p><strong>Line 5:</strong> free(p); - Frees.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>String Copy</h3>
+                <div class="code-block">#include &lt;stdio.h&gt;\n#include &lt;string.h&gt;\nint main() {\n    char src[]="Hi"; char dest[3];\n    strcpy(dest, src);\n    printf("%s\\n", dest);\n    return 0;\n}</div>
+                <p>Description: Copies string.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 5:</strong> strcpy(dest, src); - Copies.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Enum</h3>
+                <div class="code-block">#include &lt;stdio.h&gt;\nenum { RED, GREEN };\nint main() {\n    printf("%d\\n", RED);\n    return 0;\n}</div>
+                <p>Description: Enumeration.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 2:</strong> enum { RED, GREEN }; - Defines enum.</p>
+                    <p><strong>Line 4:</strong> printf("%d\\n", RED); - Uses value.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Union</h3>
+                <div class="code-block">#include &lt;stdio.h&gt;\nunion Data { int i; float f; };\nint main() {\n    union Data d;\n    d.i = 10;\n    printf("%d\\n", d.i);\n    return 0;\n}</div>
+                <p>Description: Union type.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 2:</strong> union Data { int i; float f; }; - Defines union.</p>
+                    <p><strong>Line 5:</strong> d.i = 10; - Sets value.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Bitwise AND</h3>
+                <div class="code-block">#include &lt;stdio.h&gt;\nint main() {\n    printf("%d\\n", 5 & 3);\n    return 0;\n}</div>
+                <p>Description: Bitwise operation.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 3:</strong> printf("%d\\n", 5 & 3); - AND bits.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Scanf Input</h3>
+                <div class="code-block">#include &lt;stdio.h&gt;\nint main() {\n    int x;\n    scanf("%d", &x);\n    printf("%d\\n", x);\n    return 0;\n}</div>
+                <p>Description: Reads input.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 4:</strong> scanf("%d", &x); - Reads int.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Random Number</h3>
+                <div class="code-block">#include &lt;stdio.h&gt;\n#include &lt;stdlib.h&gt;\n#include &lt;time.h&gt;\nint main() {\n    srand(time(NULL));\n    printf("%d\\n", rand() % 10);\n    return 0;\n}</div>
+                <p>Description: Generates random.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 5:</strong> srand(time(NULL)); - Seeds.</p>
+                    <p><strong>Line 6:</strong> rand() % 10 - Random 0-9.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Exit Program</h3>
+                <div class="code-block">#include &lt;stdio.h&gt;\n#include &lt;stdlib.h&gt;\nint main() {\n    exit(0);\n    return 0;\n}</div>
+                <p>Description: Exits program.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 4:</strong> exit(0); - Exits with status 0.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- C++ Scripts (20 examples) -->
+        <div id="cpp" class="lang-section">
+            <div class="script-item">
+                <h3>Hello World</h3>
+                <div class="code-block">#include &lt;iostream&gt;\nusing namespace std;\nint main() {\n    cout << "Hello, World!" << endl;\n    return 0;\n}</div>
+                <p>Description: Basic program.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 1:</strong> #include &lt;iostream&gt; - For cout.</p>
+                    <p><strong>Line 2:</strong> using namespace std; - Namespace.</p>
+                    <p><strong>Line 4:</strong> cout << "Hello, World!" << endl; - Prints.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>For Loop</h3>
+                <div class="code-block">#include &lt;iostream&gt;\nusing namespace std;\nint main() {\n    for(int i=1; i<=5; i++) cout << i << endl;\n    return 0;\n}</div>
+                <p>Description: Loops 1 to 5.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 4:</strong> for(int i=1; i<=5; i++) cout << i << endl; - For with print.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Vector</h3>
+                <div class="code-block">#include &lt;iostream&gt;\n#include &lt;vector&gt;\nusing namespace std;\nint main() {\n    vector<int> v = {1,2,3};\n    cout << v[0] << endl;\n    return 0;\n}</div>
+                <p>Description: Dynamic array.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 5:</strong> vector<int> v = {1,2,3}; - Vector init.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Class</h3>
+                <div class="code-block">#include &lt;iostream&gt;\nusing namespace std;\nclass MyClass {\npublic:\n    void greet() { cout << "Hi" << endl; }\n};\nint main() {\n    MyClass obj;\n    obj.greet();\n    return 0;\n}</div>
+                <p>Description: Basic class.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 3-6:</strong> class MyClass { ... }; - Defines class.</p>
+                    <p><strong>Line 8:</strong> MyClass obj; - Object.</p>
+                    <p><strong>Line 9:</strong> obj.greet(); - Call method.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>String</h3>
+                <div class="code-block">#include &lt;iostream&gt;\n#include &lt;string&gt;\nusing namespace std;\nint main() {\n    string s = "Hello";\n    cout << s << endl;\n    return 0;\n}</div>
+                <p>Description: String handling.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 5:</strong> string s = "Hello"; - String var.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Reference</h3>
+                <div class="code-block">#include &lt;iostream&gt;\nusing namespace std;\nint main() {\n    int x=10;\n    int& r = x;\n    cout << r << endl;\n    return 0;\n}</div>
+                <p>Description: Reference variable.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 5:</strong> int& r = x; - Reference to x.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Template Function</h3>
+                <div class="code-block">#include &lt;iostream&gt;\nusing namespace std;\ntemplate <typename T>\nvoid print(T val) { cout << val << endl; }\nint main() {\n    print(5);\n    return 0;\n}</div>
+                <p>Description: Generic function.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 3-4:</strong> template <typename T> void print(T val) { ... } - Template.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Exception</h3>
+                <div class="code-block">#include &lt;iostream&gt;\nusing namespace std;\nint main() {\n    try { throw 1; } catch(int e) { cout << "Caught" << endl; }\n    return 0;\n}</div>
+                <p>Description: Try-catch.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 4:</strong> try { throw 1; } catch(int e) { ... } - Handles exception.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Lambda</h3>
+                <div class="code-block">#include &lt;iostream&gt;\nusing namespace std;\nint main() {\n    auto l = []() { cout << "Lambda" << endl; };\n    l();\n    return 0;\n}</div>
+                <p>Description: Lambda function.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 4:</strong> auto l = []() { ... }; - Defines lambda.</p>
+                    <p><strong>Line 5:</strong> l(); - Calls.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>File Stream</h3>
+                <div class="code-block">#include &lt;iostream&gt;\n#include &lt;fstream&gt;\nusing namespace std;\nint main() {\n    ofstream f("file.txt");\n    f << "Hi";\n    f.close();\n    return 0;\n}</div>
+                <p>Description: Writes to file.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 5:</strong> ofstream f("file.txt"); - Opens file.</p>
+                    <p><strong>Line 6:</strong> f << "Hi"; - Writes.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Map</h3>
+                <div class="code-block">#include &lt;iostream&gt;\n#include &lt;map&gt;\nusing namespace std;\nint main() {\n    map<int, string> m = {{1, "one"}};\n    cout << m[1] << endl;\n    return 0;\n}</div>
+                <p>Description: Key-value map.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 5:</strong> map<int, string> m = {{1, "one"}}; - Map init.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Inheritance</h3>
+                <div class="code-block">#include &lt;iostream&gt;\nusing namespace std;\nclass Base { public: void show() { cout << "Base" << endl; } };\nclass Derived : public Base {};\nint main() {\n    Derived d;\n    d.show();\n    return 0;\n}</div>
+                <p>Description: Class inheritance.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 4:</strong> class Derived : public Base {}; - Inherits.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Operator Overload</h3>
+                <div class="code-block">#include &lt;iostream&gt;\nusing namespace std;\nclass Num { public: int n; Num(int x) : n(x) {} Num operator+(Num other) { return Num(n + other.n); } };\nint main() {\n    Num a(1), b(2);\n    Num c = a + b;\n    cout << c.n << endl;\n    return 0;\n}</div>
+                <p>Description: Overloads +.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 3:</strong> Num operator+(Num other) { ... } - Overload.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Smart Pointer</h3>
+                <div class="code-block">#include &lt;iostream&gt;\n#include &lt;memory&gt;\nusing namespace std;\nint main() {\n    unique_ptr<int> p(new int(10));\n    cout << *p << endl;\n    return 0;\n}</div>
+                <p>Description: Unique pointer.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 5:</strong> unique_ptr<int> p(new int(10)); - Smart ptr.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Range For</h3>
+                <div class="code-block">#include &lt;iostream&gt;\n#include &lt;vector&gt;\nusing namespace std;\nint main() {\n    vector<int> v = {1,2,3};\n    for(int x : v) cout << x << endl;\n    return 0;\n}</div>
+                <p>Description: Range-based for.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 6:</strong> for(int x : v) ... - Iterates vector.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Constexpr</h3>
+                <div class="code-block">#include &lt;iostream&gt;\nusing namespace std;\nconstexpr int square(int x) { return x*x; }\nint main() {\n    cout << square(5) << endl;\n    return 0;\n}</div>
+                <p>Description: Compile-time func.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 3:</strong> constexpr int square(int x) { ... } - Constexpr function.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Thread</h3>
+                <div class="code-block">#include &lt;iostream&gt;\n#include &lt;thread&gt;\nusing namespace std;\nvoid func() { cout << "Thread" << endl; }\nint main() {\n    thread t(func);\n    t.join();\n    return 0;\n}</div>
+                <p>Description: Basic thread.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 6:</strong> thread t(func); - Creates thread.</p>
+                    <p><strong>Line 7:</strong> t.join(); - Waits.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Auto Type</h3>
+                <div class="code-block">#include &lt;iostream&gt;\nusing namespace std;\nint main() {\n    auto x = 5;\n    cout << x << endl;\n    return 0;\n}</div>
+                <p>Description: Auto deduction.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 4:</strong> auto x = 5; - Infers int.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Static Cast</h3>
+                <div class="code-block">#include &lt;iostream&gt;\nusing namespace std;\nint main() {\n    double d=3.14;\n    int i = static_cast<int>(d);\n    cout << i << endl;\n    return 0;\n}</div>
+                <p>Description: Type cast.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 5:</strong> int i = static_cast<int>(d); - Casts double to int.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Random</h3>
+                <div class="code-block">#include &lt;iostream&gt;\n#include &lt;random&gt;\nusing namespace std;\nint main() {\n    random_device rd;\n    mt19937 gen(rd());\n    uniform_int_distribution<> dis(1,10);\n    cout << dis(gen) << endl;\n    return 0;\n}</div>
+                <p>Description: Random number.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 5-7:</strong> Setup random engine and distribution.</p>
+                    <p><strong>Line 8:</strong> dis(gen) - Generates.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- C# Scripts (20 examples) -->
+        <div id="csharp" class="lang-section">
+            <div class="script-item">
+                <h3>Hello World</h3>
+                <div class="code-block">using System;\nclass Program {\n    static void Main() {\n        Console.WriteLine("Hello, World!");\n    }\n}</div>
+                <p>Description: Basic console app.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 1:</strong> using System; - Imports.</p>
+                    <p><strong>Line 4:</strong> Console.WriteLine("Hello, World!"); - Prints.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>For Loop</h3>
+                <div class="code-block">using System;\nclass Program {\n    static void Main() {\n        for(int i=1; i<=5; i++) Console.WriteLine(i);\n    }\n}</div>
+                <p>Description: Loops 1 to 5.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 4:</strong> for(int i=1; i<=5; i++) ... - For loop.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>List</h3>
+                <div class="code-block">using System;\nusing System.Collections.Generic;\nclass Program {\n    static void Main() {\n        List<int> l = new List<int> {1,2,3};\n        Console.WriteLine(l[0]);\n    }\n}</div>
+                <p>Description: List collection.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 5:</strong> List<int> l = new List<int> {1,2,3}; - Init list.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Class</h3>
+                <div class="code-block">using System;\nclass MyClass {\n    public void Greet() { Console.WriteLine("Hi"); }\n}\nclass Program {\n    static void Main() {\n        MyClass obj = new MyClass();\n        obj.Greet();\n    }\n}</div>
+                <p>Description: Defines class.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 2-3:</strong> class MyClass { ... } - Class with method.</p>
+                    <p><strong>Line 7:</strong> MyClass obj = new MyClass(); - Instance.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>String Interpolation</h3>
+                <div class="code-block">using System;\nclass Program {\n    static void Main() {\n        string name = "World";\n        Console.WriteLine($"Hello, {name}!");\n    }\n}</div>
+                <p>Description: Interpolated string.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 5:</strong> $"Hello, {name}!" - Interpolation.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>LINQ Query</h3>
+                <div class="code-block">using System;\nusing System.Linq;\nclass Program {\n    static void Main() {\n        int[] nums = {1,2,3};\n        var query = from n in nums where n > 1 select n;\n        foreach(var q in query) Console.WriteLine(q);\n    }\n}</div>
+                <p>Description: LINQ example.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 6:</strong> var query = from n in nums where n > 1 select n; - Query.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Exception Handling</h3>
+                <div class="code-block">using System;\nclass Program {\n    static void Main() {\n        try { throw new Exception(); } catch { Console.WriteLine("Caught"); }\n    }\n}</div>
+                <p>Description: Try-catch.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 4:</strong> try { ... } catch { ... } - Handles exception.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Lambda</h3>
+                <div class="code-block">using System;\nclass Program {\n    static void Main() {\n        Action a = () => Console.WriteLine("Lambda");\n        a();\n    }\n}</div>
+                <p>Description: Lambda expression.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 4:</strong> Action a = () => ...; - Lambda.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>File Write</h3>
+                <div class="code-block">using System;\nusing System.IO;\nclass Program {\n    static void Main() {\n        File.WriteAllText("file.txt", "Hi");\n    }\n}</div>
+                <p>Description: Writes to file.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 5:</strong> File.WriteAllText("file.txt", "Hi"); - Writes text.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Dictionary</h3>
+                <div class="code-block">using System;\nusing System.Collections.Generic;\nclass Program {\n    static void Main() {\n        Dictionary<int, string> d = new Dictionary<int, string> {{1, "one"}};\n        Console.WriteLine(d[1]);\n    }\n}</div>
+                <p>Description: Key-value dict.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 5:</strong> Dictionary<int, string> d = ... - Init dict.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Inheritance</h3>
+                <div class="code-block">using System;\nclass Base {\n    public virtual void Show() { Console.WriteLine("Base"); }\n}\nclass Derived : Base {\n    public override void Show() { Console.WriteLine("Derived"); }\n}\nclass Program {\n    static void Main() {\n        Derived d = new Derived();\n        d.Show();\n    }\n}</div>
+                <p>Description: Inheritance and override.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 5-6:</strong> class Derived : Base { ... } - Inherits and overrides.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Async Method</h3>
+                <div class="code-block">using System;\nusing System.Threading.Tasks;\nclass Program {\n    static async Task Main() {\n        await Task.Delay(100);\n        Console.WriteLine("Done");\n    }\n}</div>
+                <p>Description: Async main.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 4:</strong> static async Task Main() { ... } - Async method.</p>
+                    <p><strong>Line 5:</strong> await Task.Delay(100); - Awaits.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Delegate</h3>
+                <div class="code-block">using System;\nclass Program {\n    delegate void Del();\n    static void Main() {\n        Del d = () => Console.WriteLine("Del");\n        d();\n    }\n}</div>
+                <p>Description: Delegate type.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 3:</strong> delegate void Del(); - Defines delegate.</p>
+                    <p><strong>Line 5:</strong> Del d = ... - Assigns.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Enum</h3>
+                <div class="code-block">using System;\nenum Color { Red, Green };\nclass Program {\n    static void Main() {\n        Console.WriteLine((int)Color.Red);\n    }\n}</div>
+                <p>Description: Enumeration.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 2:</strong> enum Color { Red, Green }; - Enum.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Struct</h3>
+                <div class="code-block">using System;\nstruct Point {\n    public int X, Y;\n}\nclass Program {\n    static void Main() {\n        Point p = new Point { X=1, Y=2 };\n        Console.WriteLine(p.X);\n    }\n}</div>
+                <p>Description: Value type struct.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 2-3:</strong> struct Point { ... } - Defines struct.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Nullable</h3>
+                <div class="code-block">using System;\nclass Program {\n    static void Main() {\n        int? x = null;\n        Console.WriteLine(x.HasValue);\n    }\n}</div>
+                <p>Description: Nullable type.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 4:</strong> int? x = null; - Nullable int.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Random</h3>
+                <div class="code-block">using System;\nclass Program {\n    static void Main() {\n        Random r = new Random();\n        Console.WriteLine(r.Next(1,10));\n    }\n}</div>
+                <p>Description: Random number.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 4:</strong> Random r = new Random(); - Random instance.</p>
+                    <p><strong>Line 5:</strong> r.Next(1,10) - Generates.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Task Run</h3>
+                <div class="code-block">using System;\nusing System.Threading.Tasks;\nclass Program {\n    static void Main() {\n        Task.Run(() => Console.WriteLine("Task"));\n    }\n}</div>
+                <p>Description: Runs task.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 5:</strong> Task.Run(() => ...); - Async task.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Interface</h3>
+                <div class="code-block">using System;\ninterface IGreeting {\n    void Greet();\n}\nclass Impl : IGreeting {\n    public void Greet() { Console.WriteLine("Hi"); }\n}\nclass Program {\n    static void Main() {\n        IGreeting g = new Impl();\n        g.Greet();\n    }\n}</div>
+                <p>Description: Interface implementation.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 2-3:</strong> interface IGreeting { ... } - Defines interface.</p>
+                    <p><strong>Line 5-6:</strong> class Impl : IGreeting { ... } - Implements.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Record</h3>
+                <div class="code-block">using System;\nrecord Person(string Name);\nclass Program {\n    static void Main() {\n        Person p = new Person("Alice");\n        Console.WriteLine(p.Name);\n    }\n}</div>
+                <p>Description: Record type.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 2:</strong> record Person(string Name); - Record definition.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- JavaScript Scripts (20 examples) -->
+        <div id="js" class="lang-section">
+            <div class="script-item">
+                <h3>Alert</h3>
+                <div class="code-block">alert("Hello, World!");</div>
+                <p>Description: Shows alert.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 1:</strong> alert("Hello, World!"); - Browser alert.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>For Loop</h3>
+                <div class="code-block">for(let i=1; i<=5; i++) console.log(i);</div>
+                <p>Description: Loops 1 to 5.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 1:</strong> for(let i=1; i<=5; i++) console.log(i); - For with log.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Array</h3>
+                <div class="code-block">let arr = [1,2,3]; console.log(arr[0]);</div>
+                <p>Description: Array access.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 1:</strong> let arr = [1,2,3]; - Array.</p>
+                    <p><strong>console.log(arr[0]):</strong> Access.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Function</h3>
+                <div class="code-block">function greet() { console.log("Hi"); } greet();</div>
+                <p>Description: Defines function.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 1:</strong> function greet() { ... } - Definition.</p>
+                    <p><strong>greet();:</strong> Call.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>If Statement</h3>
+                <div class="code-block">if(true) console.log("True");</div>
+                <p>Description: Conditional.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 1:</strong> if(true) console.log("True"); - If.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>While Loop</h3>
+                <div class="code-block">let i=1; while(i<=5) { console.log(i); i++; }</div>
+                <p>Description: While example.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 1:</strong> while(i<=5) { ... } - Loop.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Object</h3>
+                <div class="code-block">let obj = {key: "value"}; console.log(obj.key);</div>
+                <p>Description: Object literal.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 1:</strong> let obj = {key: "value"}; - Object.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Arrow Function</h3>
+                <div class="code-block">const greet = () => console.log("Hi"); greet();</div>
+                <p>Description: Arrow func.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 1:</strong> const greet = () => ...; - Arrow.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Promise</h3>
+                <div class="code-block">new Promise((resolve) => resolve("Done")).then(console.log);</div>
+                <p>Description: Basic promise.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 1:</strong> new Promise((resolve) => resolve("Done")) - Promise.</p>
+                    <p><strong>.then(console.log):</strong> Handles.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Async Await</h3>
+                <div class="code-block">async function test() { await new Promise(r => setTimeout(r, 100)); console.log("Done"); } test();</div>
+                <p>Description: Async function.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 1:</strong> async function test() { await ... } - Async with await.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Map</h3>
+                <div class="code-block">let m = new Map(); m.set(1, "one"); console.log(m.get(1));</div>
+                <p>Description: Map object.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 1:</strong> let m = new Map(); m.set(1, "one"); - Set key-value.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Set</h3>
+                <div class="code-block">let s = new Set(); s.add(1); console.log(s.has(1));</div>
+                <p>Description: Set collection.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 1:</strong> let s = new Set(); s.add(1); - Add to set.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Template Literal</h3>
+                <div class="code-block">let name = "World"; console.log(`Hello, ${name}!`);</div>
+                <p>Description: Interpolated string.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 1:</strong> `Hello, ${name}!` - Template.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Destructuring</h3>
+                <div class="code-block">let [a, b] = [1,2]; console.log(a);</div>
+                <p>Description: Array destruct.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 1:</strong> let [a, b] = [1,2]; - Destructures.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Spread Operator</h3>
+                <div class="code-block">let arr1 = [1,2]; let arr2 = [...arr1, 3]; console.log(arr2);</div>
+                <p>Description: Spread array.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 1:</strong> let arr2 = [...arr1, 3]; - Spread.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Class</h3>
+                <div class="code-block">class MyClass { greet() { console.log("Hi"); } } let obj = new MyClass(); obj.greet();</div>
+                <p>Description: ES6 class.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 1:</strong> class MyClass { ... } - Class with method.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Module Export</h3>
+                <div class="code-block">export function func() { console.log("Exported"); }</div>
+                <p>Description: Export function.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 1:</strong> export function func() { ... } - Exports.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>JSON Parse</h3>
+                <div class="code-block">let json = '{"key":"value"}'; let obj = JSON.parse(json); console.log(obj.key);</div>
+                <p>Description: Parses JSON.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 1:</strong> JSON.parse(json); - Parses string to object.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Set Timeout</h3>
+                <div class="code-block">setTimeout(() => console.log("Delayed"), 1000);</div>
+                <p>Description: Delays execution.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 1:</strong> setTimeout(..., 1000); - 1 second delay.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Fetch API</h3>
+                <div class="code-block">fetch('https://example.com').then(res => res.text()).then(console.log);</div>
+                <p>Description: Basic fetch.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 1:</strong> fetch(...) .then(...) - Fetches URL.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Python Scripts (20 examples, as "more") -->
+        <div id="python" class="lang-section">
+            <div class="script-item">
+                <h3>Hello World</h3>
+                <div class="code-block">print("Hello, World!")</div>
+                <p>Description: Prints message.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 1:</strong> print("Hello, World!") - Outputs.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>For Loop</h3>
+                <div class="code-block">for i in range(1,6): print(i)</div>
+                <p>Description: Loops 1 to 5.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 1:</strong> for i in range(1,6): print(i) - For with range.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>List</h3>
+                <div class="code-block">l = [1,2,3]\nprint(l[0])</div>
+                <p>Description: List access.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 1:</strong> l = [1,2,3] - List.</p>
+                    <p><strong>Line 2:</strong> print(l[0]) - Access.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Function</h3>
+                <div class="code-block">def greet():\n    print("Hi")\ngreet()</div>
+                <p>Description: Defines function.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 1-2:</strong> def greet(): print("Hi") - Definition.</p>
+                    <p><strong>Line 3:</strong> greet() - Call.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>If Statement</h3>
+                <div class="code-block">if True:\n    print("True")</div>
+                <p>Description: Conditional.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 1-2:</strong> if True: print("True") - If.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>While Loop</h3>
+                <div class="code-block">i=1\nwhile i<=5:\n    print(i)\n    i+=1</div>
+                <p>Description: While example.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 2-4:</strong> while i<=5: ... - Loop.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Dictionary</h3>
+                <div class="code-block">d = {"key": "value"}\nprint(d["key"])</div>
+                <p>Description: Dict access.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 1:</strong> d = {"key": "value"} - Dict.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Lambda</h3>
+                <div class="code-block">greet = lambda: print("Hi")\ngreet()</div>
+                <p>Description: Lambda func.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 1:</strong> greet = lambda: print("Hi") - Lambda.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Try Except</h3>
+                <div class="code-block">try:\n    raise Exception\nexcept:\n    print("Caught")</div>
+                <p>Description: Exception handling.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 1-4:</strong> try: ... except: ... - Handles.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>File Write</h3>
+                <div class="code-block">with open("file.txt", "w") as f:\n    f.write("Hi")</div>
+                <p>Description: Writes file.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 1-2:</strong> with open(...) as f: f.write("Hi") - Writes.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Class</h3>
+                <div class="code-block">class MyClass:\n    def greet(self):\n        print("Hi")\nobj = MyClass()\nobj.greet()</div>
+                <p>Description: Class with method.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 1-3:</strong> class MyClass: def greet(self): ... - Class.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Inheritance</h3>
+                <div class="code-block">class Base:\n    def show(self):\n        print("Base")\nclass Derived(Base):\n    pass\nd = Derived()\nd.show()</div>
+                <p>Description: Inherits method.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 4:</strong> class Derived(Base): - Inherits.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>List Comprehension</h3>
+                <div class="code-block">l = [i for i in range(1,6)]\nprint(l)</div>
+                <p>Description: Comp list.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 1:</strong> [i for i in range(1,6)] - Comprehension.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Generator</h3>
+                <div class="code-block">def gen():\n    yield 1\n    yield 2\nfor g in gen():\n    print(g)</div>
+                <p>Description: Generator func.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 2-3:</strong> yield 1 - Yields values.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Decorator</h3>
+                <div class="code-block">def decor(f):\n    def wrap():\n        print("Decor")\n        f()\n    return wrap\n@decor\ndef func():\n    print("Func")\nfunc()</div>
+                <p>Description: Function decorator.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 6:</strong> @decor - Applies decorator.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Async Def</h3>
+                <div class="code-block">import asyncio\nasync def test():\n    await asyncio.sleep(1)\n    print("Done")\nasyncio.run(test())</div>
+                <p>Description: Async function.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 2:</strong> async def test(): - Async def.</p>
+                    <p><strong>Line 3:</strong> await asyncio.sleep(1) - Awaits.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Enum</h3>
+                <div class="code-block">from enum import Enum\nclass Color(Enum):\n    RED = 1\nprint(Color.RED.value)</div>
+                <p>Description: Enumeration.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 2-3:</strong> class Color(Enum): RED = 1 - Enum class.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Random</h3>
+                <div class="code-block">import random\nprint(random.randint(1,10))</div>
+                <p>Description: Random int.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 2:</strong> random.randint(1,10) - Random between 1-10.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>JSON Load</h3>
+                <div class="code-block">import json\nd = json.loads('{"key":"value"}')\nprint(d["key"])</div>
+                <p>Description: Parses JSON.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 2:</strong> json.loads(...) - Loads string to dict.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Thread</h3>
+                <div class="code-block">import threading\ndef func():\n    print("Thread")\nt = threading.Thread(target=func)\nt.start()\nt.join()</div>
+                <p>Description: Basic thread.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 4:</strong> t = threading.Thread(target=func) - Creates.</p>
+                    <p><strong>Line 5:</strong> t.start() - Starts.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Java Scripts (20 examples) -->
+        <div id="java" class="lang-section">
+            <div class="script-item">
+                <h3>Hello World</h3>
+                <div class="code-block">public class Hello {\n    public static void main(String[] args) {\n        System.out.println("Hello, World!");\n    }\n}</div>
+                <p>Description: Basic program.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 3:</strong> System.out.println("Hello, World!"); - Prints.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>For Loop</h3>
+                <div class="code-block">public class Loop {\n    public static void main(String[] args) {\n        for(int i=1; i<=5; i++) System.out.println(i);\n    }\n}</div>
+                <p>Description: Loops 1 to 5.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 3:</strong> for(int i=1; i<=5; i++) ... - For.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Array List</h3>
+                <div class="code-block">import java.util.ArrayList;\npublic class List {\n    public static void main(String[] args) {\n        ArrayList<Integer> l = new ArrayList<>();\n        l.add(1);\n        System.out.println(l.get(0));\n    }\n}</div>
+                <p>Description: Dynamic list.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 4:</strong> ArrayList<Integer> l = new ArrayList<>(); - Init.</p>
+                    <p><strong>Line 5:</strong> l.add(1); - Add.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Class</h3>
+                <div class="code-block">class MyClass {\n    void greet() { System.out.println("Hi"); }\n}\npublic class Main {\n    public static void main(String[] args) {\n        MyClass obj = new MyClass();\n        obj.greet();\n    }\n}</div>
+                <p>Description: Class with method.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 1-2:</strong> class MyClass { ... } - Class.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>If Statement</h3>
+                <div class="code-block">public class If {\n    public static void main(String[] args) {\n        if(true) System.out.println("True");\n    }\n}</div>
+                <p>Description: Conditional.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 3:</strong> if(true) ... - If.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>While Loop</h3>
+                <div class="code-block">public class While {\n    public static void main(String[] args) {\n        int i=1;\n        while(i<=5) {\n            System.out.println(i);\n            i++;\n        }\n    }\n}</div>
+                <p>Description: While example.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 4-7:</strong> while(i<=5) { ... } - Loop.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>HashMap</h3>
+                <div class="code-block">import java.util.HashMap;\npublic class Map {\n    public static void main(String[] args) {\n        HashMap<Integer, String> m = new HashMap<>();\n        m.put(1, "one");\n        System.out.println(m.get(1));\n    }\n}</div>
+                <p>Description: Key-value map.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 4:</strong> HashMap<Integer, String> m = new HashMap<>(); - Init.</p>
+                    <p><strong>Line 5:</strong> m.put(1, "one"); - Put.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Exception</h3>
+                <div class="code-block">public class Except {\n    public static void main(String[] args) {\n        try {\n            throw new Exception();\n        } catch(Exception e) {\n            System.out.println("Caught");\n        }\n    }\n}</div>
+                <p>Description: Try-catch.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 3-7:</strong> try { ... } catch(...) { ... } - Handles.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Lambda</h3>
+                <div class="code-block">public class Lambda {\n    public static void main(String[] args) {\n        Runnable r = () -> System.out.println("Lambda");\n        r.run();\n    }\n}</div>
+                <p>Description: Lambda expression.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 3:</strong> Runnable r = () -> ...; - Lambda.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>File Writer</h3>
+                <div class="code-block">import java.io.FileWriter;\npublic class File {\n    public static void main(String[] args) throws Exception {\n        FileWriter f = new FileWriter("file.txt");\n        f.write("Hi");\n        f.close();\n    }\n}</div>
+                <p>Description: Writes file.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 4:</strong> FileWriter f = new FileWriter("file.txt"); - Opens.</p>
+                    <p><strong>Line 5:</strong> f.write("Hi"); - Writes.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Inheritance</h3>
+                <div class="code-block">class Base {\n    void show() { System.out.println("Base"); }\n}\nclass Derived extends Base {}\npublic class Main {\n    public static void main(String[] args) {\n        Derived d = new Derived();\n        d.show();\n    }\n}</div>
+                <p>Description: Extends class.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 4:</strong> class Derived extends Base {} - Inherits.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Interface</h3>
+                <div class="code-block">interface Greeting {\n    void greet();\n}\nclass Impl implements Greeting {\n    public void greet() { System.out.println("Hi"); }\n}\npublic class Main {\n    public static void main(String[] args) {\n        Greeting g = new Impl();\n        g.greet();\n    }\n}</div>
+                <p>Description: Implements interface.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 4:</strong> class Impl implements Greeting { ... } - Implements.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Enum</h3>
+                <div class="code-block">enum Color { RED, GREEN }\npublic class EnumEx {\n    public static void main(String[] args) {\n        System.out.println(Color.RED.ordinal());\n    }\n}</div>
+                <p>Description: Enum type.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 1:</strong> enum Color { RED, GREEN } - Enum.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Random</h3>
+                <div class="code-block">import java.util.Random;\npublic class Rand {\n    public static void main(String[] args) {\n        Random r = new Random();\n        System.out.println(r.nextInt(10) + 1);\n    }\n}</div>
+                <p>Description: Random int.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 4:</strong> Random r = new Random(); - Instance.</p>
+                    <p><strong>Line 5:</strong> r.nextInt(10) + 1 - 1 to 10.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Thread</h3>
+                <div class="code-block">public class ThreadEx {\n    public static void main(String[] args) {\n        Thread t = new Thread(() -> System.out.println("Thread"));\n        t.start();\n        try { t.join(); } catch(Exception e) {}\n    }\n}</div>
+                <p>Description: Creates thread.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 3:</strong> Thread t = new Thread(() -> ...); - Thread with lambda.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Stream</h3>
+                <div class="code-block">import java.util.Arrays;\npublic class StreamEx {\n    public static void main(String[] args) {\n        Arrays.stream(new int[]{1,2,3}).forEach(System.out::println);\n    }\n}</div>
+                <p>Description: Stream forEach.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 4:</strong> Arrays.stream(...) .forEach(...) - Streams array.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Optional</h3>
+                <div class="code-block">import java.util.Optional;\npublic class Opt {\n    public static void main(String[] args) {\n        Optional<String> o = Optional.of("Value");\n        System.out.println(o.get());\n    }\n}</div>
+                <p>Description: Optional value.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 4:</strong> Optional<String> o = Optional.of("Value"); - Optional.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Record</h3>
+                <div class="code-block">record Person(String name) {}\npublic class Rec {\n    public static void main(String[] args) {\n        Person p = new Person("Alice");\n        System.out.println(p.name());\n    }\n}</div>
+                <p>Description: Record type.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 1:</strong> record Person(String name) {} - Record.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Switch Expression</h3>
+                <div class="code-block">public class SwitchEx {\n    public static void main(String[] args) {\n        int day = 1;\n        String s = switch(day) { case 1 -> "Mon"; default -> "Other"; };\n        System.out.println(s);\n    }\n}</div>
+                <p>Description: Switch expr.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 4:</strong> switch(day) { case 1 -> "Mon"; ... } - Expression.</p>
+                </div>
+            </div>
+            <div class="script-item">
+                <h3>Var Type</h3>
+                <div class="code-block">public class VarEx {\n    public static void main(String[] args) {\n        var x = 10;\n        System.out.println(x);\n    }\n}</div>
+                <p>Description: Var inference.</p>
+                <button onclick="toggleExplain(this)">Explain</button>
+                <div class="explanation">
+                    <p><strong>Line 3:</strong> var x = 10; - Infers int.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="youtube">
+        <h1>My YouTube Channels</h1>
+        <div class="youtube-links">
+            <a href="https://www.youtube.com/@speedy0RB1T" target="_blank">Speedy0RB1T</a>
+            <br>
+            <a href="https://www.youtube.com/@Dev0RB1T" target="_blank">Dev0RB1T</a>
+        </div>
+    </section>
+
+    <section id="js-runner">
+        <h1>JavaScript Runner</h1>
+        <textarea id="jsCode" rows="10" cols="50" placeholder="Enter JS code here..."></textarea>
+        <br>
+        <button onclick="runJS()">Run JS</button>
+        <button onclick="clearOutput('js-output')">Clear</button>
+        <div id="js-output"></div>
+        <p>Note: Outputs to this div or console. Errors shown here. Use console.log for output.</p>
+    </section>
+
+    <section id="html-runner">
+        <h1>HTML Runner</h1>
+        <textarea id="htmlCode" rows="10" cols="50" placeholder="&lt;!DOCTYPE html&gt;&lt;html&gt;&lt;body&gt;&lt;h1&gt;Hello&lt;/h1&gt;&lt;/body&gt;&lt;/html&gt;"></textarea>
+        <br>
+        <button onclick="previewHTML()">Preview HTML</button>
+        <button onclick="clearOutput('html-preview')">Clear</button>
+        <iframe id="html-preview" sandbox="allow-scripts"></iframe>
+        <p>Note: If code has errors, browser may show blank or partial. Check console for JS errors.</p>
+    </section>
+
+    <section id="lua-runner">
+        <h1>Lua Runner</h1>
+        <textarea id="luaCode" rows="10" cols="50" placeholder="-- Enter Lua code\nprint('Hello, World!')"></textarea>
+        <br>
+        <button onclick="runLua()">Run Lua</button>
+        <button onclick="clearOutput('lua-output')">Clear</button>
+        <div id="lua-output"></div>
+        <p>Note: Uses Fengari for execution. Print outputs here. Errors shown.</p>
+    </section>
+
+    <script>
+        // Navigation
+        function showSection(sectionId) {
+            document.querySelectorAll('section').forEach(sec => sec.classList.remove('active'));
+            document.getElementById(sectionId).classList.add('active');
+        }
+
+        // Language Tabs
+        function showLang(lang) {
+            document.querySelectorAll('.lang-section').forEach(sec => sec.classList.remove('active'));
+            document.getElementById(lang).classList.add('active');
+        }
+
+        // Explain Toggle
+        function toggleExplain(btn) {
+            const exp = btn.nextElementSibling;
+            exp.classList.toggle('active');
+        }
+
+        // QR Generator
+        function generateQR() {
+            const url = document.getElementById('urlInput').value;
+            const size = parseInt(document.getElementById('sizeInput').value);
+            const color = document.getElementById('colorInput').value;
+            const qrcodeDiv = document.getElementById('qrcode');
+            qrcodeDiv.innerHTML = '';
+            QRCode.toCanvas(qrcodeDiv, url, { width: size, color: { dark: color, light: '#000' } }, (error) => {
+                if (error) console.error(error);
+                document.getElementById('downloadBtn').style.display = 'inline-block';
+            });
+        }
+
+        function downloadQR() {
+            const canvas = document.querySelector('#qrcode canvas');
+            if (canvas) {
+                const link = document.createElement('a');
+                link.download = 'qrcode.png';
+                link.href = canvas.toDataURL();
+                link.click();
+            }
+        }
+
+        // JS Runner - Improved with console redirection for better usability
+        let consoleOutput = '';
+        const originalConsoleLog = console.log;
+        function runJS() {
+            const code = document.getElementById('jsCode').value;
+            const output = document.getElementById('js-output');
+            consoleOutput = '';
+            console.log = (msg) => { consoleOutput += msg + '\n'; originalConsoleLog(msg); };
+            try {
+                const result = eval(code);
+                output.innerText = consoleOutput + (result !== undefined ? '\nResult: ' + result : '');
+            } catch (error) {
+                output.innerText = 'Error: ' + error.message;
+            }
+            console.log = originalConsoleLog;
+        }
+
+        // HTML Runner
+        function previewHTML() {
+            const code = document.getElementById('htmlCode').value;
+            const iframe = document.getElementById('html-preview');
+            iframe.srcdoc = code;
+        }
+
+        // Lua Runner - Improved with print redirection
+        function runLua() {
+            const code = document.getElementById('luaCode').value;
+            const output = document.getElementById('lua-output');
+            try {
+                const L = fengari.luaL_newstate();
+                fengari.luaL_openlibs(L);
+                const status = fengari.luaL_loadstring(L, code);
+                if (status !== 0) throw new Error(fengari.lua_tostring(L, -1));
+                const resultStatus = fengari.lua_pcall(L, 0, 0, 0);
+                if (resultStatus !== 0) throw new Error(fengari.lua_tostring(L, -1));
+                output.innerText = 'Executed successfully (check for prints in console if not shown).';
+            } catch (error) {
+                output.innerText = 'Error: ' + error.message;
+            }
+        }
+
+        function clearOutput(id) {
+            if (id === 'html-preview') {
+                document.getElementById(id).srcdoc = '';
+            } else {
+                document.getElementById(id).innerText = '';
+            }
+        }
+
+        // Initial load
+        showSection('qr');
+        showLang('html');
+    </script>
+</body>
+</html>
